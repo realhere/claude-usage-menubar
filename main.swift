@@ -40,6 +40,7 @@ func usageColor(_ v: Int) -> NSColor {
 
 func writeRenderLog(_ s: String) {
     let path = NSString(string: "~/ClaudeUsage/last_render.log").expandingTildeInPath
+    try? FileManager.default.createDirectory(atPath: (path as NSString).deletingLastPathComponent, withIntermediateDirectories: true)
     let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd HH:mm:ss"
     let line = df.string(from: Date()) + " " + s + "\n"
     if let data = line.data(using: .utf8) {

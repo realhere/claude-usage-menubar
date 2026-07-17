@@ -30,6 +30,7 @@ def load_cache():
 
 def save_cache(cache):
     try:
+        os.makedirs(os.path.dirname(CACHE), exist_ok=True)
         json.dump(cache, open(CACHE, "w"))
     except Exception:
         pass
