@@ -27,7 +27,7 @@ automatically at login.
 ## Install
 
 ```bash
-git clone https://github.com/<your-username>/claude-usage-menubar.git
+git clone https://github.com/realhere/claude-usage-menubar.git
 cd claude-usage-menubar
 ./install.sh
 ```
