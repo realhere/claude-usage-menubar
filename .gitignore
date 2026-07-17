@@ -1,0 +1,14 @@
+# build artifacts
+ClaudeUsage.app/
+claude-usage
+*.o
+cu-tmp*
+build/
+
+# personal runtime data (never commit)
+model_cache.json
+last_render.log
+_test_out.json
+icon_options.png
+
+.DS_Store
