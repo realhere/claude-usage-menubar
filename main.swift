@@ -1,27 +1,25 @@
 import Cocoa
 
 // Claude usage menu bar app. Pure ASCII source; Chinese via \u{} escapes.
+// Bilingual: picks Chinese or English labels from the system's preferred language.
 // Data from usage_helper.py (official /usage endpoint, with per-model cache).
 
 let refreshInterval: TimeInterval = 5 * 60
 let staleThreshold = 600   // 秒；超過才標「快取」
 
-// ---- Chinese labels ----
-let T_TITLE   = "Claude \u{7528}\u{91CF}"
-let T_5H      = "5 \u{5C0F}\u{6642}\u{7528}\u{91CF}"
-let T_7D_ALL  = "\u{9031}\u{7528}\u{91CF}\u{FF08}\u{6574}\u{9AD4}\u{FF09}"
-let T_WEEK    = "\u{9031}\u{7528}\u{91CF}"
-let T_RESET   = "\u{91CD}\u{7F6E}\u{FF1A}"
-let T_REMAIN  = "\u{9084}\u{5269}"
-let T_DAY     = "\u{5929}"
-let T_HOUR    = "\u{5C0F}\u{6642}"
-let T_MIN     = "\u{5206}"
-let T_UPDATED = "\u{66F4}\u{65B0}\u{65BC} "
-let T_REFRESH = "\u{7ACB}\u{5373}\u{91CD}\u{65B0}\u{6574}\u{7406}"
-let T_QUIT    = "\u{7D50}\u{675F}"
-let T_FAIL    = "\u{8B80}\u{53D6}\u{5931}\u{6557}"
-let T_CACHE   = "\u{5FEB}\u{53D6}"
-let T_AGO     = "\u{524D}"
+// ---- localization ----
+let isZh = (Locale.preferredLanguages.first ?? "en").hasPrefix("zh")
+func L(_ zh: String, _ en: String) -> String { isZh ? zh : en }
+
+let T_TITLE   = L("Claude \u{7528}\u{91CF}", "Claude Usage")
+let T_5H      = L("5 \u{5C0F}\u{6642}\u{7528}\u{91CF}", "5-hour")
+let T_7D_ALL  = L("\u{9031}\u{7528}\u{91CF}\u{FF08}\u{6574}\u{9AD4}\u{FF09}", "Weekly (all)")
+let T_WEEK    = L("\u{9031}\u{7528}\u{91CF}", "weekly")
+let T_RESET   = L("\u{91CD}\u{7F6E}\u{FF1A}", "Resets ")
+let T_UPDATED = L("\u{66F4}\u{65B0}\u{65BC} ", "Updated ")
+let T_REFRESH = L("\u{7ACB}\u{5373}\u{91CD}\u{65B0}\u{6574}\u{7406}", "Refresh now")
+let T_QUIT    = L("\u{7D50}\u{675F}", "Quit")
+let T_FAIL    = L("\u{8B80}\u{53D6}\u{5931}\u{6557}", "Failed to load")
 
 struct ModelUsage { let name: String; let percent: Int; let resetsAt: String?; let staleSeconds: Int }
 
@@ -126,8 +124,6 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if let btn = statusItem.button {
-            // Apple HIG: menu bar status icons are template SF Symbols, sized to the menu
-            // bar font so they optically align with text and neighbouring system glyphs.
             let cfg = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
             let img = NSImage(systemSymbolName: "chart.bar.xaxis", accessibilityDescription: "Claude usage")?
                 .withSymbolConfiguration(cfg)
@@ -137,7 +133,7 @@ final class AppController: NSObject, NSApplicationDelegate {
             btn.title = " ..."
         }
         statusItem.menu = menu
-        writeRenderLog("LAUNCH")
+        writeRenderLog("LAUNCH isZh=\(isZh) lang=\(Locale.preferredLanguages.first ?? "?")")
         buildMenu(Usage())
         refresh()
         timer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { [weak self] _ in
@@ -226,23 +222,26 @@ final class AppController: NSObject, NSApplicationDelegate {
         guard let d = date else { return nil }
         let df = DateFormatter()
         df.locale = Locale(identifier: "en_US_POSIX")
-        df.timeZone = TimeZone(identifier: "Asia/Taipei")
+        df.timeZone = TimeZone.current
         df.dateFormat = "M/d HH:mm"
         let when = df.string(from: d)
         let secs = d.timeIntervalSinceNow
         if secs <= 0 { return T_RESET + when }
         let h = Int(secs) / 3600
-        var remain: String
-        if h >= 24 { remain = "\(T_REMAIN) \(h/24) \(T_DAY)" }
-        else if h > 0 { remain = "\(T_REMAIN) \(h) \(T_HOUR)" }
-        else { remain = "\(T_REMAIN) \(Int(secs)/60) \(T_MIN)" }
-        return "\(T_RESET)\(when)  \(remain)"
+        let remain: String
+        if h >= 24 { remain = L("\u{9084}\u{5269} \(h/24) \u{5929}", "in \(h/24)d") }
+        else if h > 0 { remain = L("\u{9084}\u{5269} \(h) \u{5C0F}\u{6642}", "in \(h)h") }
+        else { remain = L("\u{9084}\u{5269} \(Int(secs)/60) \u{5206}", "in \(Int(secs)/60)m") }
+        return isZh ? "\(T_RESET)\(when)  \(remain)" : "\(T_RESET)\(when) (\(remain))"
     }
 
     func staleNote(_ secs: Int) -> String {
         let mins = secs / 60
-        let ago = mins >= 60 ? "\(mins/60) \(T_HOUR)" : "\(mins) \(T_MIN)"
-        return "\u{FF08}\(T_CACHE) \(ago)\(T_AGO)\u{FF09}"   // （快取 X 分前）
+        if mins >= 60 {
+            let h = mins / 60
+            return L("\u{FF08}\u{5FEB}\u{53D6} \(h) \u{5C0F}\u{6642}\u{524D}\u{FF09}", "(cached \(h)h ago)")
+        }
+        return L("\u{FF08}\u{5FEB}\u{53D6} \(mins) \u{5206}\u{524D}\u{FF09}", "(cached \(mins)m ago)")
     }
 
     func addRow(_ title: String, _ value: Int?, _ subLine: String?) {
@@ -292,7 +291,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         if let t = lastUpdated {
             let df = DateFormatter()
             df.locale = Locale(identifier: "en_US_POSIX")
-            df.timeZone = TimeZone(identifier: "Asia/Taipei")
+            df.timeZone = TimeZone.current
             df.dateFormat = "HH:mm:ss"
             let item = NSMenuItem(title: "  " + T_UPDATED + df.string(from: t), action: nil, keyEquivalent: "")
             item.isEnabled = false

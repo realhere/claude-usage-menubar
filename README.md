@@ -19,7 +19,7 @@ Click it for a breakdown with color-coded progress bars and reset times:
 
 Progress bars are green (< 50%), orange (50–79%), red (≥ 80%). Values refresh
 every 5 minutes. The app lives only in the menu bar (no Dock icon) and starts
-automatically at login.
+automatically at login. The interface is bilingual: it shows **English** or **Traditional Chinese** automatically based on your macOS system language.
 
 ## Requirements
 
