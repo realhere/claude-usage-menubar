@@ -5,7 +5,7 @@
 A tiny macOS menu bar app that shows your Claude subscription usage at a glance —
 no need to open the settings menu.
 
-![Claude Usage menu bar app](screenshot.png)
+![Claude Usage menu bar app](screenshot-en.png)
 
 ```
 ▮▮▮ 5H 20% | W 12% | F 10%
