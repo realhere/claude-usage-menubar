@@ -108,6 +108,22 @@ final class HeaderView: NSView {
     }
 }
 
+final class PlainRowView: NSView {
+    let text: String
+    let font: NSFont
+    let color: NSColor
+    init(text: String, font: NSFont, color: NSColor, width: CGFloat, height: CGFloat) {
+        self.text = text; self.font = font; self.color = color
+        super.init(frame: NSRect(x: 0, y: 0, width: width, height: height))
+    }
+    required init?(coder: NSCoder) { fatalError() }
+    override func draw(_ dirtyRect: NSRect) {
+        let attr: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+        let sz = (text as NSString).size(withAttributes: attr)
+        (text as NSString).draw(at: NSPoint(x: 16, y: (bounds.height - sz.height) / 2), withAttributes: attr)
+    }
+}
+
 final class AppController: NSObject, NSApplicationDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let menu = NSMenu()
@@ -262,12 +278,14 @@ final class AppController: NSObject, NSApplicationDelegate {
         addHeader(T_TITLE)
         menu.addItem(NSMenuItem.separator())
         if !u.ok {
-            let item = NSMenuItem(title: "  " + T_FAIL, action: nil, keyEquivalent: "")
-            item.isEnabled = false
+            let item = NSMenuItem()
+            item.view = PlainRowView(text: T_FAIL, font: NSFont.systemFont(ofSize: 13, weight: .medium),
+                                     color: .labelColor, width: menuWidth, height: 24)
             menu.addItem(item)
             if let e = u.error {
-                let sub = NSMenuItem(title: "  " + e, action: nil, keyEquivalent: "")
-                sub.isEnabled = false
+                let sub = NSMenuItem()
+                sub.view = PlainRowView(text: e, font: NSFont.systemFont(ofSize: 11),
+                                        color: .secondaryLabelColor, width: menuWidth, height: 22)
                 menu.addItem(sub)
             }
             menu.addItem(NSMenuItem.separator())
@@ -294,8 +312,10 @@ final class AppController: NSObject, NSApplicationDelegate {
             df.locale = Locale(identifier: "en_US_POSIX")
             df.timeZone = TimeZone.current
             df.dateFormat = "HH:mm:ss"
-            let item = NSMenuItem(title: "  " + T_UPDATED + df.string(from: t), action: nil, keyEquivalent: "")
-            item.isEnabled = false
+            let item = NSMenuItem()
+            item.view = PlainRowView(text: T_UPDATED + df.string(from: t),
+                                     font: NSFont.systemFont(ofSize: 11),
+                                     color: .secondaryLabelColor, width: menuWidth, height: 24)
             menu.addItem(item)
         }
         let r = NSMenuItem(title: T_REFRESH, action: #selector(manualRefresh), keyEquivalent: "r")
