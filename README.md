@@ -30,6 +30,15 @@ automatically at login. The interface is bilingual: it shows **English** or **Tr
 
 ## Install
 
+### Option A — Download the app (quick)
+
+1. Download `ClaudeUsage-v1.0-macos.zip` from the [latest release](https://github.com/realhere/claude-usage-menubar/releases/latest) and unzip it.
+2. Move `ClaudeUsage.app` to `/Applications`.
+3. First launch: **right-click the app -> Open -> Open**. (It's open-source but not notarized, so macOS Gatekeeper asks once. Alternative: System Settings -> Privacy & Security -> **Open Anyway**.)
+4. It appears in your menu bar. For auto-start at login, add it under System Settings -> General -> Login Items -- or use Option B.
+
+### Option B — Build from source (recommended; full setup)
+
 ```bash
 git clone https://github.com/realhere/claude-usage-menubar.git
 cd claude-usage-menubar
@@ -37,8 +46,8 @@ cd claude-usage-menubar
 ```
 
 The script builds a small `.app`, installs it to `~/Applications`, and sets up a
-LaunchAgent so it starts at login. On first launch macOS may ask for keychain
-access (to read the Claude app's cookies) — click **Allow**.
+LaunchAgent so it starts at login and restarts automatically. On first launch
+macOS may ask for keychain access (to read the Claude app's cookies) — click **Allow**.
 
 ## Uninstall
 
