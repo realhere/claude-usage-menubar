@@ -23,6 +23,7 @@ rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 swiftc -O "$SCRIPT_DIR/main.swift" -o "$APP_DIR/Contents/MacOS/$APP_NAME"
 cp "$SCRIPT_DIR/usage_helper.py" "$APP_DIR/Contents/Resources/usage_helper.py"
+cp "$SCRIPT_DIR/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
 
 cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -38,6 +39,7 @@ cat > "$APP_DIR/Contents/Info.plist" <<PLIST
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>LSMinimumSystemVersion</key><string>12.0</string>
     <key>LSUIElement</key><true/>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>NSHighResolutionCapable</key><true/>
 </dict>
 </plist>
