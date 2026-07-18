@@ -31,18 +31,19 @@ NSGraphicsContext.restoreGraphicsState()
 
 // gradient background (indigo -> violet), clipped to squircle
 path.addClip()
+// Colours sampled from the real Claude.app icon: #D97756 (top) -> #DB6945 (bottom)
 let grad = NSGradient(colors: [
-    NSColor(srgbRed: 0.40, green: 0.42, blue: 0.86, alpha: 1),
-    NSColor(srgbRed: 0.29, green: 0.24, blue: 0.60, alpha: 1),
+    NSColor(srgbRed: 0.851, green: 0.467, blue: 0.337, alpha: 1),
+    NSColor(srgbRed: 0.859, green: 0.412, blue: 0.271, alpha: 1),
 ])!
 grad.draw(in: squircle, angle: -90)
 
 // subtle top highlight
 let hi = NSGradient(colors: [
-    NSColor(white: 1, alpha: 0.18),
+    NSColor(white: 1, alpha: 0.06),
     NSColor(white: 1, alpha: 0.0),
 ])!
-hi.draw(in: NSRect(x: inset, y: inset + side*0.55, width: side, height: side*0.45), angle: -90)
+hi.draw(in: NSRect(x: inset, y: inset + side*0.6, width: side, height: side*0.4), angle: -90)
 
 // white bar-chart glyph (matches the menu bar's chart.bar.xaxis)
 let cfg = NSImage.SymbolConfiguration(pointSize: side * 0.5, weight: .semibold)
