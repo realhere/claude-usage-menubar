@@ -43,14 +43,25 @@ def fail(msg):
     sys.exit(0)
 
 
-def keychain_password():
+# The Safe Storage key's account name varies by Claude version ("Claude" or
+# "Claude Key"), so try each and let decryption pick the one that actually works.
+ACCOUNTS = ["Claude", "Claude Key"]
+
+
+def keychain_key_for(acct):
+    """Return (aes_key, denied). aes_key is None if the item is missing/unreadable."""
     try:
-        return subprocess.check_output(
+        pw = subprocess.check_output(
             ["security", "find-generic-password", "-w",
-             "-s", "Claude Safe Storage", "-a", "Claude"],
-            stderr=subprocess.DEVNULL).strip()
+             "-s", "Claude Safe Storage", "-a", acct],
+            stderr=subprocess.PIPE).strip()
+        if not pw:
+            return None, False
+        return hashlib.pbkdf2_hmac("sha1", pw, b"saltysalt", 1003, 16), False
+    except subprocess.CalledProcessError as e:
+        return None, (e.returncode not in (44,))  # 44 = not found; else access problem
     except Exception:
-        fail("keychain access denied")
+        return None, False
 
 
 def decrypt(enc, key):
@@ -69,9 +80,7 @@ def decrypt(enc, key):
 
 def load_cookies():
     if not os.path.exists(CK):
-        fail("desktop Claude app cookies not found")
-    pw = keychain_password()
-    key = hashlib.pbkdf2_hmac("sha1", pw, b"saltysalt", 1003, 16)
+        fail("Claude desktop app not found (no Cookies file)")
     tmp = tempfile.mktemp(suffix=".db")
     shutil.copy(CK, tmp)
     try:
@@ -82,14 +91,39 @@ def load_cookies():
     finally:
         try: os.remove(tmp)
         except OSError: pass
+    session_enc = next((enc for name, enc in rows if name == "sessionKey"), None)
+    if session_enc is None:
+        fail("not logged in (no sessionKey)")
+    # Try each account in turn; stop at the first key that decrypts the session
+    # cookie to a valid value. This avoids prompting for accounts we do not need.
+    key = None
+    saw_denied = False
+    found_item = False
+    for acct in ACCOUNTS:
+        k, denied = keychain_key_for(acct)
+        if denied:
+            saw_denied = True
+        if k is None:
+            continue
+        found_item = True
+        try:
+            if decrypt(session_enc, k).startswith("sk-ant"):
+                key = k
+                break
+        except Exception:
+            pass
+    if key is None:
+        if saw_denied:
+            fail("keychain access denied - authorize it once (see README)")
+        if not found_item:
+            fail("keychain key not found - is the Claude desktop app logged in?")
+        fail("could not decrypt cookies (keychain key mismatch)")
     cookies = {}
     for name, enc in rows:
         try:
             cookies[name] = decrypt(enc, key)
         except Exception:
             pass
-    if "sessionKey" not in cookies:
-        fail("not logged in (no sessionKey)")
     return cookies
 
 

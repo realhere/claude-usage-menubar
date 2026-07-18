@@ -98,6 +98,21 @@ web app shows:
 - Change the menu bar icon: the `chart.bar.xaxis` SF Symbol in `main.swift`.
 - Rebuild after edits: `./install.sh`.
 
+## Troubleshooting
+
+**Menu bar shows `!` / "keychain access denied"** — the app needs a one-time approval to read the Claude desktop app's Safe Storage key. In Terminal, run:
+
+```bash
+security find-generic-password -w -s "Claude Safe Storage" -a "Claude Key" >/dev/null 2>&1
+security find-generic-password -w -s "Claude Safe Storage" -a "Claude" >/dev/null 2>&1
+```
+
+When macOS prompts, click **Always Allow**. Then click **Refresh now** in the menu (or quit and reopen). The key's account name is `Claude` on some versions and `Claude Key` on others — the app tries both automatically.
+
+**"keychain key not found" / "not logged in"** — open the Claude desktop app and sign in; it creates the key and cookies this app reads.
+
+**"auth failed (HTTP 401/403)"** — sign in to the Claude desktop app again, or the pinned User-Agent may need updating after a major desktop-app update (see `UA` near the top of `usage_helper.py`).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
