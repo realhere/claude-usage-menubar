@@ -33,14 +33,19 @@ automatically at login. The interface is bilingual: it shows **English** or **Tr
 
 ## Install
 
-### Option A — Download the app (quick)
+### Option A — Homebrew (recommended)
 
-1. Download `ClaudeUsage-v1.1-macos.zip` from the [latest release](https://github.com/realhere/claude-usage-menubar/releases/latest) and unzip it.
-2. Move `ClaudeUsage.app` to `/Applications`.
-3. First launch: **right-click the app -> Open -> Open**. (It's open-source but not notarized, so macOS Gatekeeper asks once. Alternative: System Settings -> Privacy & Security -> **Open Anyway**.)
-4. It appears in your menu bar. For auto-start at login, add it under System Settings -> General -> Login Items -- or use Option B.
+```bash
+brew install realhere/tap/claude-usage
+brew services start realhere/tap/claude-usage
+```
 
-### Option B — Build from source (recommended; full setup)
+Builds from source on your Mac, so Gatekeeper never blocks it, and `brew services`
+keeps it running at login. Upgrade later with `brew upgrade claude-usage`.
+
+### Option B — Build from source manually
+
+Requires Xcode Command Line Tools (`xcode-select --install`).
 
 ```bash
 git clone https://github.com/realhere/claude-usage-menubar.git
@@ -49,10 +54,31 @@ cd claude-usage-menubar
 ```
 
 The script builds a small `.app`, installs it to `~/Applications`, and sets up a
-LaunchAgent so it starts at login and restarts automatically. On first launch
-macOS may ask for keychain access (to read the Claude app's cookies) — click **Allow**.
+LaunchAgent so it starts at login and restarts automatically. Also not affected by
+Gatekeeper, since the binary is compiled locally.
+
+### Option C — Download the prebuilt app
+
+1. Download `ClaudeUsage-v1.1-macos.zip` from the [latest release](https://github.com/realhere/claude-usage-menubar/releases/latest) and unzip it.
+2. Move `ClaudeUsage.app` to `/Applications`.
+3. First launch: **right-click the app -> Open -> Open**. The app is open-source but
+   not notarized by Apple, so Gatekeeper warns once. (Alternative: System Settings ->
+   Privacy & Security -> **Open Anyway**.) Options A and B avoid this entirely.
+4. For auto-start at login, add it under System Settings -> General -> Login Items.
+
+On first refresh macOS asks for keychain access, so the app can read the Claude
+desktop app's cookies — click **Always Allow**.
 
 ## Uninstall
+
+If you installed with Homebrew:
+
+```bash
+brew services stop realhere/tap/claude-usage
+brew uninstall claude-usage
+```
+
+Otherwise, from the cloned repo:
 
 ```bash
 ./uninstall.sh

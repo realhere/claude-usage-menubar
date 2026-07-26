@@ -31,14 +31,19 @@
 
 ## 安裝
 
-### 方式 A — 下載 app（最快）
+### 方式 A — Homebrew（推薦）
 
-1. 從 [最新 release](https://github.com/realhere/claude-usage-menubar/releases/latest) 下載 `ClaudeUsage-v1.1-macos.zip` 並解壓縮。
-2. 把 `ClaudeUsage.app` 移到 `/Applications`。
-3. 首次開啟：**在 app 上按右鍵 → 打開 → 打開**。（本程式開源但未經 Apple 公證，所以 macOS Gatekeeper 會問一次。或到「系統設定 → 隱私權與安全性 → 仍要打開」。）
-4. 它會出現在選單列。想要登入時自動啟動，到「系統設定 → 一般 → 登入項目」加入它 —— 或改用方式 B。
+```bash
+brew install realhere/tap/claude-usage
+brew services start realhere/tap/claude-usage
+```
 
-### 方式 B — 從原始碼建置（推薦；完整設定）
+會在你的 Mac 上從原始碼建置，所以完全不會被 Gatekeeper 擋，`brew services` 也會讓它
+在登入時自動啟動。之後用 `brew upgrade claude-usage` 更新。
+
+### 方式 B — 手動從原始碼建置
+
+需要 Xcode Command Line Tools（`xcode-select --install`）。
 
 ```bash
 git clone https://github.com/realhere/claude-usage-menubar.git
@@ -46,9 +51,30 @@ cd claude-usage-menubar
 ./install.sh
 ```
 
-腳本會建置一個小巧的 `.app`、安裝到 `~/Applications`，並設定 LaunchAgent 讓它在登入時自動啟動、當機時自動重啟。首次啟動時 macOS 可能會要求鑰匙圈存取權（用來讀取 Claude app 的 cookie）—— 按**允許**即可。
+腳本會建置一個小巧的 `.app`、安裝到 `~/Applications`，並設定 LaunchAgent 讓它在登入時
+自動啟動、當機時自動重啟。因為是在本機編譯，同樣不會被 Gatekeeper 擋。
+
+### 方式 C — 下載預先建置好的 app
+
+1. 從 [最新 release](https://github.com/realhere/claude-usage-menubar/releases/latest) 下載 `ClaudeUsage-v1.1-macos.zip` 並解壓縮。
+2. 把 `ClaudeUsage.app` 移到 `/Applications`。
+3. 首次開啟：**在 app 上按右鍵 → 打開 → 打開**。本程式開源但未經 Apple 公證，所以
+   Gatekeeper 會警告一次。（或到「系統設定 → 隱私權與安全性 → 仍要打開」。）
+   方式 A 和 B 完全沒有這個問題。
+4. 想要登入時自動啟動，到「系統設定 → 一般 → 登入項目」加入它。
+
+首次更新時 macOS 會要求鑰匙圈存取權（讓 app 讀取 Claude 桌面版的 cookie）—— 按**允許**即可。
 
 ## 解除安裝
+
+如果你是用 Homebrew 安裝的：
+
+```bash
+brew services stop realhere/tap/claude-usage
+brew uninstall claude-usage
+```
+
+其他方式則在 clone 下來的資料夾裡執行：
 
 ```bash
 ./uninstall.sh
