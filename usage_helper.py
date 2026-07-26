@@ -20,6 +20,12 @@ import sqlite3, subprocess, hashlib, os, shutil, tempfile, json, urllib.request,
 CK = os.path.expanduser("~/Library/Application Support/Claude/Cookies")
 CACHE = os.path.expanduser("~/ClaudeUsage/model_cache.json")
 
+# Per-model limits are cached only long enough to ride out a brief API hiccup.
+# A limit that is genuinely gone (e.g. after downgrading Max -> Pro, where Fable
+# stops having its own quota) must disappear quickly rather than linger as a
+# frozen, misleading number.
+CACHE_TTL = 3600  # 1 hour
+
 
 def load_cache():
     try:
@@ -183,13 +189,36 @@ def main():
         live_names.add(m["name"])
         cache[m["name"]] = {"percent": m["percent"], "resets_at": m.get("resets_at"), "ts": now}
         m["stale_seconds"] = 0
+    cache = {k: v for k, v in cache.items()
+             if k in live_names or (now - v.get("ts", 0)) < CACHE_TTL}
     save_cache(cache)
-    # API 沒回傳的 model，用 8 天內的快取值補上（標記 stale）
+    # API 沒回傳的 model，只用短期快取補上（標記 stale）。超過 TTL 就讓它消失，
+    # 因為那代表這個額度已經不存在，而不是暫時讀不到。
     for name, info in cache.items():
-        if name not in live_names and (now - info.get("ts", 0)) < 8 * 86400:
+        if name not in live_names and (now - info.get("ts", 0)) < CACHE_TTL:
             models.append({"name": name, "percent": info.get("percent"),
                            "resets_at": info.get("resets_at"),
                            "stale_seconds": now - info.get("ts", 0)})
+
+    # Usage credits (relevant on Pro, where premium models bill against credits
+    # instead of having their own quota). Only reported when actually enabled.
+    spend = data.get("spend") if isinstance(data.get("spend"), dict) else {}
+    credit = None
+    if spend.get("enabled"):
+        used = spend.get("used") or {}
+        amount_minor = used.get("amount_minor")
+        exponent = used.get("exponent")
+        if isinstance(amount_minor, (int, float)) and isinstance(exponent, int):
+            used_amount = float(amount_minor) / (10 ** exponent)
+            credit = {
+                "used": round(used_amount, 2),
+                "currency": used.get("currency") or "USD",
+                "percent": as_int(spend.get("percent")),
+            }
+            limit = spend.get("limit") or {}
+            limit_minor = limit.get("amount_minor") if isinstance(limit, dict) else None
+            if isinstance(limit_minor, (int, float)):
+                credit["limit"] = round(float(limit_minor) / (10 ** exponent), 2)
 
     out = {
         "ok": True,
@@ -200,6 +229,7 @@ def main():
             "seven_day": sd.get("resets_at"),
         },
         "models": models,
+        "credit": credit,
     }
     print(json.dumps(out, ensure_ascii=False))
 

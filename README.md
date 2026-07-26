@@ -15,7 +15,10 @@ Click it for a breakdown with color-coded progress bars and reset times:
 
 - **5-hour** usage (rolling session limit)
 - **Weekly** usage (overall)
-- Per-model weekly usage (e.g. **Fable**), when the API reports it
+- Per-model weekly usage (e.g. **Fable**) — shown only while your plan actually has
+  such a quota, so it disappears automatically if you switch plans
+- **Usage credits** — shown when credits are enabled (relevant on Pro, where premium
+  models bill against credits instead of a separate quota)
 
 Progress bars are green (< 50%), orange (50–79%), red (≥ 80%). Values refresh
 every 5 minutes. The app lives only in the menu bar (no Dock icon) and starts
@@ -32,7 +35,7 @@ automatically at login. The interface is bilingual: it shows **English** or **Tr
 
 ### Option A — Download the app (quick)
 
-1. Download `ClaudeUsage-v1.0-macos.zip` from the [latest release](https://github.com/realhere/claude-usage-menubar/releases/latest) and unzip it.
+1. Download `ClaudeUsage-v1.1-macos.zip` from the [latest release](https://github.com/realhere/claude-usage-menubar/releases/latest) and unzip it.
 2. Move `ClaudeUsage.app` to `/Applications`.
 3. First launch: **right-click the app -> Open -> Open**. (It's open-source but not notarized, so macOS Gatekeeper asks once. Alternative: System Settings -> Privacy & Security -> **Open Anyway**.)
 4. It appears in your menu bar. For auto-start at login, add it under System Settings -> General -> Login Items -- or use Option B.

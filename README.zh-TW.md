@@ -16,7 +16,10 @@
 
 - **5 小時**用量（滾動的短時段限制）
 - **週**用量（整體）
-- 各模型的週用量（例如 **Fable**），在 API 有回報時顯示
+- 各模型的週用量（例如 **Fable**）—— 只在你的方案真的有這個額度時才顯示，
+  換方案後會自動消失，不會留下沒意義的數字
+- **Credit 用量** —— 在你啟用 Credit 時顯示（Pro 方案用進階模型是扣 Credit，
+  而不是有獨立額度）
 
 進度條顏色：綠（< 50%）、橙（50–79%）、紅（≥ 80%）。每 5 分鐘自動更新。app 只存在於選單列（不佔 Dock），並會在登入時自動啟動。介面雙語:會依你的 macOS 系統語言自動顯示英文或繁體中文。
 
@@ -30,7 +33,7 @@
 
 ### 方式 A — 下載 app（最快）
 
-1. 從 [最新 release](https://github.com/realhere/claude-usage-menubar/releases/latest) 下載 `ClaudeUsage-v1.0-macos.zip` 並解壓縮。
+1. 從 [最新 release](https://github.com/realhere/claude-usage-menubar/releases/latest) 下載 `ClaudeUsage-v1.1-macos.zip` 並解壓縮。
 2. 把 `ClaudeUsage.app` 移到 `/Applications`。
 3. 首次開啟：**在 app 上按右鍵 → 打開 → 打開**。（本程式開源但未經 Apple 公證，所以 macOS Gatekeeper 會問一次。或到「系統設定 → 隱私權與安全性 → 仍要打開」。）
 4. 它會出現在選單列。想要登入時自動啟動，到「系統設定 → 一般 → 登入項目」加入它 —— 或改用方式 B。

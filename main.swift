@@ -20,12 +20,22 @@ let T_UPDATED = L("\u{66F4}\u{65B0}\u{65BC} ", "Updated ")
 let T_REFRESH = L("\u{7ACB}\u{5373}\u{91CD}\u{65B0}\u{6574}\u{7406}", "Refresh now")
 let T_QUIT    = L("\u{7D50}\u{675F}", "Quit")
 let T_FAIL    = L("\u{8B80}\u{53D6}\u{5931}\u{6557}", "Failed to load")
+let T_CREDIT  = L("Credit \u{7528}\u{91CF}", "Credits")
+let T_USED    = L("\u{5DF2}\u{7528} ", "used ")
 
 struct ModelUsage { let name: String; let percent: Int; let resetsAt: String?; let staleSeconds: Int }
+
+struct CreditUsage {
+    let used: Double
+    let currency: String
+    let percent: Int?
+    let limit: Double?
+}
 
 struct Usage {
     var fiveHour: Int?
     var sevenDay: Int?
+    var credit: CreditUsage?
     var models: [ModelUsage] = []
     var resets: [String: String] = [:]
     var ok: Bool = false
@@ -56,9 +66,14 @@ final class UsageRowView: NSView {
     let title: String
     let value: Int?
     let subLine: String?
-    init(title: String, value: Int?, subLine: String?, width: CGFloat) {
+    let valueText: String?
+    let showBar: Bool
+    init(title: String, value: Int?, subLine: String?, width: CGFloat,
+         valueText: String? = nil, showBar: Bool = true) {
         self.title = title; self.value = value; self.subLine = subLine
-        super.init(frame: NSRect(x: 0, y: 0, width: width, height: subLine == nil ? 44 : 58))
+        self.valueText = valueText; self.showBar = showBar
+        let h: CGFloat = (subLine == nil ? 44 : 58) - (showBar ? 0 : 10)
+        super.init(frame: NSRect(x: 0, y: 0, width: width, height: h))
     }
     required init?(coder: NSCoder) { fatalError() }
     override func draw(_ dirtyRect: NSRect) {
@@ -70,7 +85,7 @@ final class UsageRowView: NSView {
         (title as NSString).draw(at: NSPoint(x: pad, y: titleY), withAttributes: [
             .font: NSFont.systemFont(ofSize: 13, weight: .medium),
             .foregroundColor: NSColor.labelColor])
-        let pctStr = value == nil ? "-" : "\(v)%"
+        let pctStr = valueText ?? (value == nil ? "-" : "\(v)%")
         let pctAttr: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold),
             .foregroundColor: color]
@@ -79,6 +94,14 @@ final class UsageRowView: NSView {
         let barH: CGFloat = 6
         let barY = titleY - 13
         let barW = w - pad * 2
+        if !showBar {
+            if let rl = subLine {
+                (rl as NSString).draw(at: NSPoint(x: pad, y: titleY - 19), withAttributes: [
+                    .font: NSFont.systemFont(ofSize: 11),
+                    .foregroundColor: NSColor.secondaryLabelColor])
+            }
+            return
+        }
         NSColor.quaternaryLabelColor.setFill()
         NSBezierPath(roundedRect: NSRect(x: pad, y: barY, width: barW, height: barH),
                      xRadius: barH/2, yRadius: barH/2).fill()
@@ -192,6 +215,13 @@ final class AppController: NSObject, NSApplicationDelegate {
         if let r = obj["resets"] as? [String: Any] {
             for (k, val) in r { if let s = val as? String { u.resets[k] = s } }
         }
+        if let cr = obj["credit"] as? [String: Any],
+           let used = cr["used"] as? Double {
+            u.credit = CreditUsage(used: used,
+                                   currency: (cr["currency"] as? String) ?? "USD",
+                                   percent: cr["percent"] as? Int,
+                                   limit: cr["limit"] as? Double)
+        }
         if let ms = obj["models"] as? [[String: Any]] {
             for m in ms {
                 if let name = m["name"] as? String, let pct = m["percent"] as? Int {
@@ -207,7 +237,8 @@ final class AppController: NSObject, NSApplicationDelegate {
     func render(_ u: Usage) {
         if u.ok {
             let mstr = u.models.map { "\($0.name):\($0.percent)" }.joined(separator: ",")
-            writeRenderLog("OK 5h=\(u.fiveHour ?? -1) 7d=\(u.sevenDay ?? -1) models=[\(mstr)]")
+            let cstr = u.credit.map { "\($0.currency)\($0.used)" + ($0.limit.map { "/\($0)" } ?? "") } ?? "none"
+            writeRenderLog("OK 5h=\(u.fiveHour ?? -1) 7d=\(u.sevenDay ?? -1) models=[\(mstr)] credit=\(cstr)")
         } else {
             writeRenderLog("ERR " + (u.error ?? "unknown"))
         }
@@ -302,8 +333,34 @@ final class AppController: NSObject, NSApplicationDelegate {
             }
             addRow("\(m.name) \(T_WEEK)", m.percent, line)
         }
+        if let cr = u.credit {
+            addCreditRow(cr)
+        }
         menu.addItem(NSMenuItem.separator())
         addFooter()
+    }
+
+    func money(_ v: Double, _ currency: String) -> String {
+        let sym = currency == "USD" ? "$" : (currency + " ")
+        return String(format: "%@%.2f", sym, v)
+    }
+
+    func addCreditRow(_ cr: CreditUsage) {
+        let usedStr = money(cr.used, cr.currency)
+        if let limit = cr.limit, limit > 0 {
+            let pct = cr.percent ?? Int(round(cr.used / limit * 100))
+            let item = NSMenuItem()
+            item.view = UsageRowView(title: T_CREDIT, value: pct,
+                                     subLine: T_USED + usedStr + " / " + money(limit, cr.currency),
+                                     width: menuWidth)
+            menu.addItem(item)
+        } else {
+            // No spending cap: a progress bar would be meaningless, show the amount.
+            let item = NSMenuItem()
+            item.view = UsageRowView(title: T_CREDIT, value: nil, subLine: nil,
+                                     width: menuWidth, valueText: usedStr, showBar: false)
+            menu.addItem(item)
+        }
     }
 
     func addFooter() {
