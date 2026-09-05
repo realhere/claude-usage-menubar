@@ -8,10 +8,13 @@ no need to open the settings menu.
 ![Claude Usage menu bar app](screenshot-en.png)
 
 ```
-▮▮▮ 5H 20% | W 12% | F 10%
+[icon]  20%
+        12%
 ```
 
-Click it for a breakdown with color-coded progress bars and reset times:
+A compact two-line readout in the menu bar — 5-hour usage on top, weekly usage
+below, no labels needed. Click it for a full breakdown with color-coded progress
+bars and reset times:
 
 - **5-hour** usage (rolling session limit)
 - **Weekly** usage (overall)
@@ -124,7 +127,8 @@ web app shows:
 ## Customization
 
 - Change the refresh interval: `refreshInterval` in `main.swift`.
-- Change the menu bar icon: the `chart.bar.xaxis` SF Symbol in `main.swift`.
+- Change the menu bar icon: replace `ClaudeMark.png` (or swap in an SF Symbol via
+  `renderButtonImage()` in `main.swift`).
 - Rebuild after edits: `./install.sh`.
 
 ## Troubleshooting
@@ -149,6 +153,9 @@ MIT — see [LICENSE](LICENSE).
 ## Disclaimer
 
 Not affiliated with, authorized, or endorsed by Anthropic. "Claude" is a
-trademark of Anthropic. This is an unofficial, personal-use tool that reads your
-own account's usage from your own machine. Use at your own risk; you are
-responsible for complying with Anthropic's terms of service.
+trademark of Anthropic, and the menu bar icon (`ClaudeMark.png`) is adapted from
+Anthropic's mark, used here only to make the tool visually recognizable as
+Claude-related at a glance — not to imply an official Anthropic product. This is
+an unofficial, personal-use tool that reads your own account's usage from your
+own machine. Use at your own risk; you are responsible for complying with
+Anthropic's terms of service.

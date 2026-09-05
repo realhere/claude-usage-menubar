@@ -24,6 +24,7 @@ mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 swiftc -O "$SCRIPT_DIR/main.swift" -o "$APP_DIR/Contents/MacOS/$APP_NAME"
 cp "$SCRIPT_DIR/usage_helper.py" "$APP_DIR/Contents/Resources/usage_helper.py"
 cp "$SCRIPT_DIR/AppIcon.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
+cp "$SCRIPT_DIR/ClaudeMark.png" "$APP_DIR/Contents/Resources/ClaudeMark.png"
 
 cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -33,8 +34,8 @@ cat > "$APP_DIR/Contents/Info.plist" <<PLIST
     <key>CFBundleName</key><string>$APP_NAME</string>
     <key>CFBundleDisplayName</key><string>Claude Usage</string>
     <key>CFBundleIdentifier</key><string>$LABEL</string>
-    <key>CFBundleVersion</key><string>1.1</string>
-    <key>CFBundleShortVersionString</key><string>1.1</string>
+    <key>CFBundleVersion</key><string>1.2</string>
+    <key>CFBundleShortVersionString</key><string>1.2</string>
     <key>CFBundleExecutable</key><string>$APP_NAME</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>LSMinimumSystemVersion</key><string>12.0</string>
@@ -72,7 +73,7 @@ launchctl bootout "gui/$UID_/$LABEL" >/dev/null 2>&1 || true
 launchctl bootstrap "gui/$UID_" "$PLIST"
 
 echo ""
-echo "Done! Look for the bar-chart icon in your menu bar (top-right)."
+echo "Done! Look for the coral starburst icon in your menu bar (top-right)."
 echo "On first launch macOS may ask for keychain access to read the Claude"
 echo "desktop app's cookies - click Allow."
 echo ""

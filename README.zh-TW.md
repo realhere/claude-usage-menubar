@@ -6,13 +6,14 @@
 
 ![Claude 用量選單列 app](screenshot.png)
 
-選單列會顯示精簡摘要，點開看完整明細：
+選單列是精簡的兩行式顯示：
 
 ```
-▮▮▮ 5H 20% | W 12% | F 10%
+[圖示]  20%
+        12%
 ```
 
-點開後有彩色進度條與重置時間：
+上面是 5 小時用量、下面是週用量，不需要文字標籤。點開看完整明細，有彩色進度條與重置時間：
 
 - **5 小時**用量（滾動的短時段限制）
 - **週**用量（整體）
@@ -104,7 +105,8 @@ Claude 沒有公開的用量 API，所以本程式讀取和 Claude 網頁版相�
 ## 自訂
 
 - 更新頻率：改 `main.swift` 裡的 `refreshInterval`。
-- 選單列圖示：改 `main.swift` 裡的 `chart.bar.xaxis`（SF Symbol 名稱）。
+- 選單列圖示：換掉 `ClaudeMark.png`（或在 `main.swift` 的 `renderButtonImage()`
+  裡改用其他 SF Symbol）。
 - 改完後重新建置：`./install.sh`。
 
 ## 疑難排解
@@ -128,4 +130,7 @@ MIT —— 見 [LICENSE](LICENSE)。
 
 ## 免責聲明
 
-本專案與 Anthropic 無關，未經其授權或背書。「Claude」是 Anthropic 的商標。這是一個非官方、供個人使用的工具，只從你自己的機器讀取你自己帳號的用量。使用風險自負；你必須自行遵守 Anthropic 的服務條款。
+本專案與 Anthropic 無關，未經其授權或背書。「Claude」是 Anthropic 的商標，選單列圖示
+（`ClaudeMark.png`）改編自 Anthropic 的標誌，這裡使用它純粹是為了讓工具一眼就能看出跟
+Claude 有關，並不代表這是 Anthropic 官方產品。這是一個非官方、供個人使用的工具，只從
+你自己的機器讀取你自己帳號的用量。使用風險自負；你必須自行遵守 Anthropic 的服務條款。

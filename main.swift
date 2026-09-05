@@ -162,22 +162,82 @@ final class AppController: NSObject, NSApplicationDelegate {
         return NSString(string: "~/ClaudeUsage/usage_helper.py").expandingTildeInPath
     }
 
+    var markPath: String {
+        if let res = Bundle.main.resourcePath {
+            let p = (res as NSString).appendingPathComponent("ClaudeMark.png")
+            if FileManager.default.fileExists(atPath: p) { return p }
+        }
+        return NSString(string: "~/ClaudeUsage/ClaudeMark.png").expandingTildeInPath
+    }
+
+    lazy var markImage: NSImage? = NSImage(contentsOfFile: markPath)
+    var lastUsage: Usage?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         if let btn = statusItem.button {
-            let cfg = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
-            let img = NSImage(systemSymbolName: "chart.bar.xaxis", accessibilityDescription: "Claude usage")?
-                .withSymbolConfiguration(cfg)
-            img?.isTemplate = true
-            btn.image = img
+            let icon = markImage?.copy() as? NSImage
+            icon?.size = NSSize(width: 15, height: 15)
+            btn.image = icon
             btn.imagePosition = .imageLeading
             btn.title = " ..."
         }
+        NSApp.addObserver(self, forKeyPath: "effectiveAppearance", options: [.new], context: nil)
         statusItem.menu = menu
         writeRenderLog("LAUNCH isZh=\(isZh) lang=\(Locale.preferredLanguages.first ?? "?")")
         buildMenu(Usage())
         refresh()
         timer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) { [weak self] _ in
             self?.refresh()
+        }
+    }
+
+    func menuBarIsDark() -> Bool {
+        let appearance = statusItem.button?.effectiveAppearance ?? NSApp.effectiveAppearance
+        return appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+    }
+
+    // 把「圖示 + 上下兩行百分比」合成一張圖，取代舊版單行「5H x% | W y%」文字。
+    // 圖示固定用珊瑚橘（跟外觀深淺無關，比照 Dropbox/Spotify 等彩色選單列圖示的慣例）；
+    // 文字則依目前選單列是深色或淺色，動態選白色或黑色，否則淺色選單列下文字會看不見。
+    func renderButtonImage(fiveHour: Int?, sevenDay: Int?) -> NSImage {
+        let barH: CGFloat = 22
+        let topText = fiveHour.map { "\($0)%" } ?? "-"
+        let botText = sevenDay.map { "\($0)%" } ?? "-"
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .medium)
+        let textColor: NSColor = menuBarIsDark() ? .white : .black
+
+        // 圖示放大到接近整個選單列高度，跟上下兩行數字的視覺範圍對齊（而不是縮在旁邊）。
+        let iconSize: CGFloat = barH - 2
+        let icon = markImage?.copy() as? NSImage
+        icon?.size = NSSize(width: iconSize, height: iconSize)
+        let iconW: CGFloat = icon != nil ? iconSize : 0
+
+        let padX: CGFloat = 4, gap: CGFloat = 6
+        let topSize = (topText as NSString).size(withAttributes: [.font: font])
+        let botSize = (botText as NSString).size(withAttributes: [.font: font])
+        let textW = max(topSize.width, botSize.width)
+        let totalW = padX * 2 + iconW + (icon != nil ? gap : 0) + textW
+
+        let img = NSImage(size: NSSize(width: totalW, height: barH))
+        img.lockFocus()
+        if let icon = icon {
+            icon.draw(in: NSRect(x: padX, y: (barH - iconSize) / 2, width: iconSize, height: iconSize))
+        }
+        let textX = padX + iconW + (icon != nil ? gap : 0)
+        let lineH = barH / 2
+        let attr: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
+        (topText as NSString).draw(at: NSPoint(x: textX, y: lineH + (lineH - topSize.height) / 2 - 0.5), withAttributes: attr)
+        (botText as NSString).draw(at: NSPoint(x: textX, y: (lineH - botSize.height) / 2 - 0.5), withAttributes: attr)
+        img.unlockFocus()
+        img.isTemplate = false
+        return img
+    }
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?,
+                                change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "effectiveAppearance", let u = lastUsage, u.ok {
+            // 選單列深淺色切換時，用快取資料重畫一次文字顏色，不必等下次排程更新。
+            statusItem.button?.image = renderButtonImage(fiveHour: u.fiveHour, sevenDay: u.sevenDay)
         }
     }
 
@@ -242,16 +302,17 @@ final class AppController: NSObject, NSApplicationDelegate {
         } else {
             writeRenderLog("ERR " + (u.error ?? "unknown"))
         }
+        lastUsage = u
         if let btn = statusItem.button {
             if u.ok {
-                var parts: [String] = []
-                if let f = u.fiveHour { parts.append("5H \(f)%") }
-                if let w = u.sevenDay { parts.append("W \(w)%") }
-                if let fable = u.models.first(where: { $0.name == "Fable" }) {
-                    parts.append("F \(fable.percent)%")
-                }
-                btn.title = " " + parts.joined(separator: " | ")
+                btn.title = ""
+                btn.imagePosition = .imageOnly
+                btn.image = renderButtonImage(fiveHour: u.fiveHour, sevenDay: u.sevenDay)
             } else {
+                let icon = markImage?.copy() as? NSImage
+                icon?.size = NSSize(width: 15, height: 15)
+                btn.image = icon
+                btn.imagePosition = .imageLeading
                 btn.title = " !"
             }
         }
