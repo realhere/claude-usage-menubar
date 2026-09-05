@@ -128,7 +128,9 @@ web app shows:
 
 - Change the refresh interval: `refreshInterval` in `main.swift`.
 - Change the menu bar icon: replace `ClaudeMark.png` (or swap in an SF Symbol via
-  `renderButtonImage()` in `main.swift`).
+  `renderButtonImage()` in `main.swift`). The composited image is a template image
+  (`isTemplate = true`), so only its alpha shape matters — it renders monochrome
+  and adapts to light/dark menu bars automatically, like other system icons.
 - Rebuild after edits: `./install.sh`.
 
 ## Troubleshooting

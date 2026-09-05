@@ -106,7 +106,9 @@ Claude 沒有公開的用量 API，所以本程式讀取和 Claude 網頁版相�
 
 - 更新頻率：改 `main.swift` 裡的 `refreshInterval`。
 - 選單列圖示：換掉 `ClaudeMark.png`（或在 `main.swift` 的 `renderButtonImage()`
-  裡改用其他 SF Symbol）。
+  裡改用其他 SF Symbol）。合成後的圖片是樣板圖示（`isTemplate = true`），只有形狀
+  （alpha）算數，顏色不重要——會自動變單色、依深淺色選單列自動換黑白，跟其他系統
+  圖示一致。
 - 改完後重新建置：`./install.sh`。
 
 ## 疑難排解
